@@ -35,23 +35,21 @@ const Navbar = ({ user, setUser }) => {
                         }}>Dashboard</Link>
 
                         {user.user.role === 'patient' && (
-                            <Link to="/dashboard" style={{ // Currently same link, but conceptually different
+                            <Link to="/book" style={{
                                 textDecoration: 'none',
                                 color: 'var(--text-muted)',
                                 fontSize: '0.9rem'
                             }}>Book Appointment</Link>
                         )}
 
-                        {user.user.role === 'doctor' && (
-                            <Link to="/dashboard" style={{
-                                textDecoration: 'none',
-                                color: 'var(--text-muted)',
-                                fontSize: '0.9rem'
-                            }}>My Schedule</Link>
-                        )}
+                        <Link to="/schedule" style={{
+                            textDecoration: 'none',
+                            color: 'var(--text-muted)',
+                            fontSize: '0.9rem'
+                        }}>{user.user.role === 'doctor' ? 'My Schedule' : 'My Appointments'}</Link>
 
                         {(user.user.role === 'admin' || user.user.email === 'kartikchoudhary@gmail.com') && (
-                            <Link to="/dashboard" style={{
+                            <Link to="/admin" style={{
                                 textDecoration: 'none',
                                 color: 'var(--text-muted)',
                                 fontSize: '0.9rem'
@@ -67,13 +65,14 @@ const Navbar = ({ user, setUser }) => {
                         <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{user.user.name}</div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{user.user.role}</div>
                     </div>
-                    <button className="btn" style={{
-                        background: '#f1f5f9',
-                        color: '#475569',
+                    <button className="btn btn-logout-nav" style={{
+                        background: '#fee2e2',
+                        color: '#b91c1c',
                         borderRadius: '50px',
                         padding: '0.5rem 1.2rem',
                         fontSize: '0.85rem',
                         border: 'none',
+                        fontWeight: '600',
                         cursor: 'pointer',
                         transition: 'all 0.2s'
                     }} onClick={handleLogout}>Logout</button>

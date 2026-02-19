@@ -16,5 +16,8 @@ export const register = (formData) => API.post('/auth/register', formData);
 export const fetchAppointments = () => API.get('/appointments');
 export const bookAppointment = (data) => API.post('/appointments', data);
 export const updateAppointment = (id, status) => API.put(`/appointments/${id}`, { status });
+export const updateTreatment = (id, data) => API.put(`/appointments/${id}/treatment`, data);
+export const fetchStats = () => API.get('/appointments/stats');
+export const rescheduleAppointment = (id, data) => API.put(`/appointments/${id}/reschedule`, data);
 export const deleteAppointment = (id) => API.delete(`/appointments/${id}`);
 export const fetchDoctors = (specialization) => API.get(`/users/doctors?specialization=${specialization}`);

@@ -14,7 +14,10 @@ const appointmentSchema = new mongoose.Schema({
         type: String,
         enum: ['pending', 'approved', 'rejected', 'completed'],
         default: 'pending'
-    }
+    },
+    treatment: { type: String, default: '' },
+    prescription: { type: String, default: '' },
+    notes: { type: String, default: '' }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Appointment', appointmentSchema);
