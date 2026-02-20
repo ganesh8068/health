@@ -1,203 +1,182 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
-import CalendarView from '../components/CalendarView';
-// import { fetchDoctors, bookAppointment, fetchAppointments } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import { fetchDoctors, bookAppointment } from '../services/api';
 
-const BookingPage = ({ user, setUser }) => {
+const BookingPage = () => {
+    const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));
     const [step, setStep] = useState(1);
-    const [appointments, setAppointments] = useState([]);
+    const [specialization, setSpecialization] = useState('');
     const [doctors, setDoctors] = useState([]);
-    const [bookingData, setBookingData] = useState({ department: '', doctorName: '', doctorId: '', patientName: user?.user?.name, date: '', timeSlot: '', reason: '' });
+    const [selectedDoctor, setSelectedDoctor] = useState(null);
+    const [date, setDate] = useState('');
+    const [time, setTime] = useState('');
+    const navigate = useNavigate();
 
-    useEffect(() => {
-        // Mock data
-        setAppointments([
-             { _id: '1', date: '2023-10-25', timeSlot: '10:00 AM', status: 'pending' },
-        ]);
-        /*
-        const loadInitialData = async () => {
-             const { data } = await fetchAppointments();
-             setAppointments(data);
-        };
-        loadInitialData();
-        */
-    }, []);
+    const specializations = ['General Physician', 'Cardiologist', 'Dermatologist', 'Pediatrician', 'Orthopedic'];
 
-    const handleDepartmentSelect = async (dept) => {
-        setBookingData({ ...bookingData, department: dept, doctorName: '', doctorId: '' });
-        
-        // Mock Logic
-        setDoctors([
-            { _id: 'd1', name: 'Dr. Smith', specialization: dept },
-            { _id: 'd2', name: 'Dr. Johnson', specialization: dept },
-        ]);
-        setStep(2);
-        
-        /*
+    const handleSpecializationSelect = async (spec) => {
+        setSpecialization(spec);
         try {
-            const deptMap = { ... };
-            const specialization = deptMap[dept] || dept;
-            const { data } = await fetchDoctors(specialization);
-            setDoctors(data);
+            const res = await fetchDoctors(spec);
+            setDoctors(res.data);
             setStep(2);
-        } catch (err) {
-            alert("Failed to load doctors");
+        } catch (error) {
+            console.error("Error fetching doctors", error);
         }
-        */
     };
 
-    const handleDoctorSelect = (doc) => {
-        setBookingData({ ...bookingData, doctorId: doc._id, doctorName: doc.name });
-        setStep(3);
+    const handleBooking = async () => {
+        try {
+            await bookAppointment({
+                doctorId: selectedDoctor._id,
+                doctorName: selectedDoctor.name,
+                // backend expects 'department' and 'timeSlot'
+                department: specialization,
+                date,
+                timeSlot: time,
+                // patient info is derived from token on backend (req.user)
+            });
+            alert('Appointment Booked Successfully!');
+            navigate('/dashboard');
+        } catch (error) {
+            console.error("Error booking appointment", error);
+            alert('Booking Failed');
+        }
     };
-
-    const handleDateSelect = (date) => {
-        setBookingData({ ...bookingData, date: date });
-        setStep(4);
-    };
-
-    const handleConfirm = async () => {
-        alert("Appointment Booked (Simulated)");
-        // await bookAppointment(bookingData);
-        window.location.href = '/dashboard';
-    };
-
-    const steps = [
-        { num: 1, label: 'Specialist' },
-        { num: 2, label: 'Doctor' },
-        { num: 3, label: 'Date' },
-        { num: 4, label: 'Confirm' }
-    ];
 
     return (
-        <div className="min-h-screen bg-secondary-50 pb-12">
+        <div className="min-h-screen bg-surface-muted">
             <Navbar user={user} setUser={setUser} />
-            <div className="container mx-auto px-4 max-w-4xl">
-                
-                {/* Stepper */}
-                <div className="mb-10">
-                    <div className="flex justify-between items-center relative">
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-secondary-200 -z-10 rounded-full"></div>
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-primary-500 -z-10 rounded-full transition-all duration-300" style={{ width: `${((step - 1) / 3) * 100}%` }}></div>
-                        
-                        {steps.map((s) => (
-                            <div key={s.num} className="flex flex-col items-center gap-2 bg-secondary-50 px-2">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300
-                                    ${step >= s.num ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/30 ring-4 ring-primary-50' : 'bg-secondary-200 text-secondary-500'}
-                                `}>
-                                    {s.num}
-                                </div>
-                                <span className={`text-xs font-semibold ${step >= s.num ? 'text-primary-700' : 'text-secondary-400'}`}>{s.label}</span>
-                            </div>
-                        ))}
+            <div className="container mx-auto px-4 py-8 max-w-3xl">
+                <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+                    {/* Header */}
+                    <div className="bg-primary-600 p-8 text-center">
+                        <h1 className="text-3xl font-display font-bold text-white mb-2">Book Appointment</h1>
+                        <p className="text-primary-100">Follow the steps to schedule your visit</p>
                     </div>
-                </div>
 
-                <div className="card animate-in fade-in slide-in-from-bottom-4 duration-300">
-                    {step === 1 && (
-                        <div>
-                            <h2 className="text-2xl font-bold text-secondary-900 mb-6 text-center">Select Department</h2>
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                {['Cardiology', 'Dermatology', 'Neurology', 'Orthopedics', 'Pediatrics', 'Gynecology', 'General Medicine'].map(dept => (
+                    {/* Stepper */}
+                    <div className="flex border-b border-secondary-100">
+                        <div className={`flex-1 py-4 text-center text-sm font-semibold ${step >= 1 ? 'text-primary-600 border-b-2 border-primary-600' : 'text-secondary-400'}`}>1. Specialist</div>
+                        <div className={`flex-1 py-4 text-center text-sm font-semibold ${step >= 2 ? 'text-primary-600 border-b-2 border-primary-600' : 'text-secondary-400'}`}>2. Doctor</div>
+                        <div className={`flex-1 py-4 text-center text-sm font-semibold ${step >= 3 ? 'text-primary-600 border-b-2 border-primary-600' : 'text-secondary-400'}`}>3. Time</div>
+                        <div className={`flex-1 py-4 text-center text-sm font-semibold ${step >= 4 ? 'text-primary-600 border-b-2 border-primary-600' : 'text-secondary-400'}`}>4. Confirm</div>
+                    </div>
+
+                    <div className="p-8">
+                        {step === 1 && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                                {specializations.map(spec => (
                                     <button 
-                                        key={dept} 
-                                        className="p-6 rounded-xl border border-secondary-200 hover:border-primary-500 hover:shadow-md hover:bg-primary-50/20 transition-all text-secondary-700 hover:text-primary-700 font-semibold text-center flex flex-col items-center gap-2 group"
-                                        onClick={() => handleDepartmentSelect(dept)}
+                                        key={spec} 
+                                        onClick={() => handleSpecializationSelect(spec)}
+                                        className="p-4 rounded-xl border border-secondary-200 text-secondary-700 font-medium hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700 transition-all text-left flex justify-between items-center group"
                                     >
-                                        <div className="w-12 h-12 bg-secondary-100 rounded-full flex items-center justify-center text-xl group-hover:bg-primary-100 group-hover:scale-110 transition-transform">
-                                            🏥
-                                        </div>
-                                        {dept}
+                                        {spec}
+                                        <span className="opacity-0 group-hover:opacity-100 transition-opacity text-primary-600">→</span>
                                     </button>
                                 ))}
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    {step === 2 && (
-                        <div>
-                             <div className="flex items-center gap-4 mb-6">
-                                <button className="text-secondary-400 hover:text-secondary-600" onClick={() => setStep(1)}>← Back</button>
-                                <h2 className="text-2xl font-bold text-secondary-900">Choose a Doctor</h2>
-                            </div>
-                            
-                            {doctors.length > 0 ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {doctors.map(doc => (
-                                        <button key={doc._id} className="p-4 rounded-xl border border-secondary-200 hover:border-primary-500 hover:shadow-md text-left flex items-center gap-4 transition-all group" onClick={() => handleDoctorSelect(doc)}>
-                                            <div className="w-14 h-14 bg-secondary-100 rounded-full flex items-center justify-center text-2xl group-hover:bg-primary-100">👨‍⚕️</div>
-                                            <div>
-                                                <strong className="block text-lg text-secondary-900 group-hover:text-primary-700">{doc.name}</strong>
-                                                <p className="text-sm text-secondary-500">{doc.specialization}</p>
+                        {step === 2 && (
+                            <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                                <h3 className="text-lg font-bold text-secondary-900 mb-4">Select a {specialization}</h3>
+                                {doctors.length > 0 ? (
+                                    doctors.map(doc => (
+                                        <div 
+                                            key={doc._id} 
+                                            onClick={() => { setSelectedDoctor(doc); setStep(3); }}
+                                            className="p-4 rounded-xl border border-secondary-200 hover:border-primary-500 hover:bg-primary-50 cursor-pointer transition-all flex items-center gap-4"
+                                        >
+                                            <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center text-primary-700 font-bold text-xl">
+                                                {doc.name.charAt(0)}
                                             </div>
-                                        </button>
-                                    ))}
-                                </div>
-                            ) : <p className="text-center text-secondary-500 py-8">No doctors available in this department.</p>}
-                        </div>
-                    )}
-
-                    {step === 3 && (
-                        <div>
-                            <div className="flex items-center gap-4 mb-6">
-                                <button className="text-secondary-400 hover:text-secondary-600" onClick={() => setStep(2)}>← Back</button>
-                                <h2 className="text-2xl font-bold text-secondary-900">Select Date</h2>
-                            </div>
-                            <div className="max-w-md mx-auto">
-                                <CalendarView
-                                    appointments={appointments}
-                                    onDateSelect={handleDateSelect}
-                                    selectedDate={bookingData.date}
-                                />
-                            </div>
-                        </div>
-                    )}
-
-                    {step === 4 && (
-                        <div>
-                            <div className="flex items-center gap-4 mb-6">
-                                <button className="text-secondary-400 hover:text-secondary-600" onClick={() => setStep(3)}>← Back</button>
-                                <h2 className="text-2xl font-bold text-secondary-900">Confirm Appointment</h2>
-                            </div>
-                            
-                            <div className="bg-secondary-50 rounded-xl p-6 mb-6 border border-secondary-100">
-                                <div className="space-y-3">
-                                    <div className="flex justify-between border-b border-secondary-200 pb-2">
-                                        <span className="text-secondary-500">Specialist</span>
-                                        <span className="font-semibold text-secondary-900">{bookingData.department}</span>
+                                            <div>
+                                                <h4 className="font-bold text-secondary-900">{doc.name}</h4>
+                                                <p className="text-sm text-secondary-500">Available Today</p>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-8 text-secondary-500">
+                                        No doctors available for this specialization.
+                                        <button onClick={() => setStep(1)} className="block mx-auto mt-4 text-primary-600 hover:underline">Go back</button>
                                     </div>
-                                    <div className="flex justify-between border-b border-secondary-200 pb-2">
+                                )}
+                            </div>
+                        )}
+
+                        {step === 3 && (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                                <div>
+                                    <label className="block text-sm font-medium text-secondary-700 mb-2">Select Date</label>
+                                    <input 
+                                        type="date" 
+                                        className="input-field" 
+                                        onChange={(e) => setDate(e.target.value)} 
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-secondary-700 mb-2">Select Time</label>
+                                    <input 
+                                        type="time" 
+                                        className="input-field" 
+                                        onChange={(e) => setTime(e.target.value)} 
+                                    />
+                                </div>
+                                <div className="flex justify-between pt-4">
+                                    <button onClick={() => setStep(2)} className="text-secondary-500 hover:text-secondary-900 font-medium">Back</button>
+                                    <button 
+                                        onClick={() => setStep(4)} 
+                                        disabled={!date || !time}
+                                        className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Continue
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {step === 4 && (
+                            <div className="text-center space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                                <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <span className="text-4xl">📋</span>
+                                </div>
+                                <h3 className="text-2xl font-display font-bold text-secondary-900">Confirm Appointment</h3>
+                                
+                                <div className="bg-secondary-50 rounded-xl p-6 text-left space-y-3">
+                                    <div className="flex justify-between">
                                         <span className="text-secondary-500">Doctor</span>
-                                        <span className="font-semibold text-secondary-900">{bookingData.doctorName}</span>
+                                        <span className="font-semibold text-secondary-900">{selectedDoctor?.name}</span>
                                     </div>
-                                    <div className="flex justify-between border-b border-secondary-200 pb-2">
+                                    <div className="flex justify-between">
+                                        <span className="text-secondary-500">Specialization</span>
+                                        <span className="font-semibold text-secondary-900">{specialization}</span>
+                                    </div>
+                                    <div className="flex justify-between">
                                         <span className="text-secondary-500">Date</span>
-                                        <span className="font-semibold text-secondary-900">{bookingData.date}</span>
+                                        <span className="font-semibold text-secondary-900">{date}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-secondary-500">Time</span>
+                                        <span className="font-semibold text-secondary-900">{time}</span>
                                     </div>
                                 </div>
 
-                                <div className="mt-6 space-y-4">
-                                     <div>
-                                        <label className="block text-sm font-medium text-secondary-700 mb-1">Time Slot</label>
-                                        <select className="input-field" required value={bookingData.timeSlot} onChange={e => setBookingData({ ...bookingData, timeSlot: e.target.value })}>
-                                            <option value="">Select Time</option>
-                                            {['09:00 AM', '10:00 AM', '11:00 AM', '02:00 PM', '04:00 PM', '06:00 PM'].map(time => (
-                                                <option key={time} value={time}>{time}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-secondary-700 mb-1">Reason for visit (optional)</label>
-                                        <input type="text" className="input-field" placeholder="Regular checkup..." onChange={e => setBookingData({ ...bookingData, reason: e.target.value })} />
-                                    </div>
+                                <div className="flex justify-between pt-4 gap-4">
+                                    <button onClick={() => setStep(3)} className="flex-1 py-3 rounded-xl border border-secondary-200 font-semibold text-secondary-700 hover:bg-secondary-50">Back</button>
+                                    <button 
+                                        onClick={handleBooking} 
+                                        className="flex-1 btn btn-primary py-3 shadow-lg shadow-primary-500/30"
+                                    >
+                                        Confirm Booking
+                                    </button>
                                 </div>
                             </div>
-
-                            <button className="w-full btn btn-primary py-3 text-lg shadow-lg" onClick={handleConfirm} disabled={!bookingData.timeSlot}>
-                                Confirm & Book Appointment
-                            </button>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

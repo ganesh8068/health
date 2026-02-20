@@ -1,21 +1,21 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { register } from '../services/api';
 
 function Register() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [role, setRole] = useState('patient');
+    const [specialization, setSpecialization] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // Simulated registration for UI development
-             /*
-            await axios.post('http://localhost:5000/api/auth/register', { name, email, password });
-            */
+            // Real API call
+            await register({ name, email, password, role, specialization: role === 'doctor' ? specialization : undefined });
             navigate('/login');
         } catch (err) {
             setError(err.response?.data?.message || 'Registration failed');
@@ -27,7 +27,7 @@ function Register() {
             <div className="card w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border-none">
                 <div className="text-center mb-8">
                     <h2 className="text-3xl font-display font-bold text-secondary-900">Create Account</h2>
-                    <p className="text-secondary-500 mt-2">Join us to manage your simulated health journey</p>
+                    <p className="text-secondary-500 mt-2">Join us to manage your health journey</p>
                 </div>
                 
                 {error && (
@@ -70,6 +70,32 @@ function Register() {
                             onChange={(e) => setPassword(e.target.value)}
                             required
                         />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-secondary-700 mb-2">Role</label>
+                        <div className="flex gap-4 items-center">
+                            <label className="inline-flex items-center">
+                                <input type="radio" name="role" value="patient" checked={role === 'patient'} onChange={() => setRole('patient')} className="mr-2" />
+                                <span className="text-sm">Patient</span>
+                            </label>
+                            <label className="inline-flex items-center">
+                                <input type="radio" name="role" value="doctor" checked={role === 'doctor'} onChange={() => setRole('doctor')} className="mr-2" />
+                                <span className="text-sm">Doctor</span>
+                            </label>
+                        </div>
+                        {role === 'doctor' && (
+                            <div className="mt-3">
+                                <label className="block text-sm font-medium text-secondary-700 mb-2">Specialization (optional)</label>
+                                <input
+                                    type="text"
+                                    className="input-field"
+                                    placeholder="e.g., Cardiology"
+                                    value={specialization}
+                                    onChange={(e) => setSpecialization(e.target.value)}
+                                />
+                                <p className="text-xs text-secondary-500 mt-1">Doctors must register with an @medcore.in email address.</p>
+                            </div>
+                        )}
                     </div>
                     <button type="submit" className="w-full btn btn-primary py-3 text-lg shadow-lg shadow-primary-500/30">
                         Create Account

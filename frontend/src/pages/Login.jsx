@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { login } from '../services/api';
 
 function Login({ setUser }) {
     const [email, setEmail] = useState('');
@@ -11,19 +12,10 @@ function Login({ setUser }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // For demo purposes, we'll simulate a login if the backend isn't ready
-            // In a real app, you'd use the axios call below
-            /*
-            const res = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+            // Real API call
+            const res = await login({ email, password });
             localStorage.setItem('user', JSON.stringify(res.data));
             setUser(res.data);
-            */
-           
-            // Simulated login for UI development
-            // Only purely for demonstration if backend is not running
-            const mockUser = { name: 'Demo User', email, role: 'patient' };
-            localStorage.setItem('user', JSON.stringify(mockUser));
-            setUser(mockUser);
             navigate('/dashboard');
             
         } catch (err) {

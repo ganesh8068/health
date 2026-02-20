@@ -1,146 +1,119 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
-// import { fetchStats, fetchAppointments } from '../services/api'; // Keeping original imports
+import { fetchStats, fetchAppointments } from '../services/api';
 
-const DashboardPage = ({ user, setUser }) => {
-    // Mock data for development if API is not available
-    const [stats, setStats] = useState({ total: 12, upcoming: 4, completed: 8, cancelled: 0 });
-    const [recentAppointments, setRecentAppointments] = useState([
-        { _id: '1', doctorName: 'Dr. Smith', patientName: 'John Doe', department: 'Cardiology', date: '2023-10-25', status: 'upcoming' },
-        { _id: '2', doctorName: 'Dr. Jones', patientName: 'Jane Doe', department: 'Dermatology', date: '2023-10-20', status: 'completed' },
-    ]);
+const DashboardPage = () => {
+    const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));
+    const [stats, setStats] = useState({ total: 0, pending: 0, completed: 0 });
+    const [recentAppointments, setRecentAppointments] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // In a real scenario, uncomment and use the API calls
-        /*
-        const loadDashboardData = async () => {
+        const loadData = async () => {
             try {
                 const [statsRes, appointmentsRes] = await Promise.all([
                     fetchStats(),
                     fetchAppointments()
                 ]);
                 setStats(statsRes.data);
-                setRecentAppointments(appointmentsRes.data.slice(0, 5));
-            } catch (err) {
-                console.error("Failed to load dashboard data");
+                // Get the 3 most recent appointments
+                setRecentAppointments(appointmentsRes.data.slice(0, 3));
+            } catch (error) {
+                console.error("Error loading dashboard data", error);
+            } finally {
+                setLoading(false);
             }
         };
-        loadDashboardData();
-        */
-    }, []);
+
+        if (user) {
+            loadData();
+        }
+    }, [user]);
+
+    if (!user) return null;
 
     return (
-        <div className="min-h-screen bg-secondary-50">
+        <div className="min-h-screen bg-surface-muted">
             <Navbar user={user} setUser={setUser} />
-            <main className="container mx-auto px-4 py-8">
+            <div className="container mx-auto px-4 py-8 max-w-7xl">
                 <header className="mb-8">
-                    <h1 className="text-3xl font-display font-bold text-secondary-900">Welcome, {user.name || user.user?.name || 'User'}</h1>
-                    <p className="text-secondary-500 font-medium mt-1">
-                        MediCore Pro • <span className="uppercase tracking-wider text-xs font-bold bg-secondary-200 px-2 py-1 rounded-full text-secondary-700">{user.role || user.user?.role}</span>
-                    </p>
+                    <h1 className="text-3xl font-display font-bold text-secondary-900">Welcome, {user.user.name}</h1>
+                    <p className="text-secondary-500 font-medium mt-1">MediCore Pro • {user.user.role.toUpperCase()}</p>
                 </header>
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                    <div className="card border-l-4 border-l-primary-500">
-                        <h3 className="text-sm font-semibold text-secondary-500 uppercase tracking-wide mb-2">Total Appointments</h3>
-                        <p className="text-4xl font-display font-bold text-secondary-900">{stats.total}</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div className="bg-white p-6 rounded-2xl shadow-soft border border-secondary-100 flex flex-col justify-between h-32 relative overflow-hidden group">
+                        <div className="absolute right-0 top-0 w-24 h-24 bg-primary-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                        <h3 className="text-secondary-500 font-semibold relative z-10">Total Appointments</h3>
+                        <p className="text-4xl font-display font-bold text-secondary-900 mt-2 relative z-10">{stats.total}</p>
                     </div>
-                    <div className="card border-l-4 border-l-blue-500">
-                        <h3 className="text-sm font-semibold text-secondary-500 uppercase tracking-wide mb-2">Upcoming</h3>
-                        <p className="text-4xl font-display font-bold text-blue-600">{stats.upcoming}</p>
+                    
+                    <div className="bg-white p-6 rounded-2xl shadow-soft border border-secondary-100 flex flex-col justify-between h-32 relative overflow-hidden group">
+                        <div className="absolute right-0 top-0 w-24 h-24 bg-orange-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                        <h3 className="text-secondary-500 font-semibold relative z-10">Upcoming</h3>
+                        <p className="text-4xl font-display font-bold text-orange-600 mt-2 relative z-10">{stats.pending}</p>
                     </div>
-                    <div className="card border-l-4 border-l-green-500">
-                        <h3 className="text-sm font-semibold text-secondary-500 uppercase tracking-wide mb-2">Completed</h3>
-                        <p className="text-4xl font-display font-bold text-green-600">{stats.completed}</p>
-                    </div>
-                    <div className="card border-l-4 border-l-red-500">
-                        <h3 className="text-sm font-semibold text-secondary-500 uppercase tracking-wide mb-2">Cancelled/Rejected</h3>
-                        <p className="text-4xl font-display font-bold text-red-600">{stats.cancelled}</p>
+                    
+                    <div className="bg-white p-6 rounded-2xl shadow-soft border border-secondary-100 flex flex-col justify-between h-32 relative overflow-hidden group">
+                        <div className="absolute right-0 top-0 w-24 h-24 bg-green-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                        <h3 className="text-secondary-500 font-semibold relative z-10">Completed</h3>
+                        <p className="text-4xl font-display font-bold text-green-600 mt-2 relative z-10">{stats.completed}</p>
                     </div>
                 </div>
 
-                {/* Alerts Section */}
-                {(user.role === 'doctor' || user.user?.role === 'doctor') && stats.upcoming > 0 && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-10 flex items-start gap-4">
-                        <span className="text-2xl">⚠️</span>
-                        <div>
-                            <h3 className="font-bold text-yellow-800">Action Required</h3>
-                            <p className="text-yellow-700 text-sm mt-1">
-                                You have <strong>{stats.upcoming}</strong> active appointments. Please visit <strong>My Schedule</strong> to approve pending requests or start consultations.
-                            </p>
-                        </div>
-                    </div>
-                )}
-
-                {/* Main Content Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Quick Actions */}
-                    <section className="col-span-1 lg:col-span-1">
-                        <h2 className="text-xl font-bold text-secondary-900 mb-4">Quick Actions</h2>
+                    <div className="lg:col-span-2">
+                        <h2 className="text-xl font-display font-bold text-secondary-900 mb-4 flex items-center">
+                            <span className="w-1.5 h-6 bg-primary-500 rounded-full mr-3"></span>
+                            Recent Activity
+                        </h2>
                         <div className="flex flex-col gap-4">
-                            {(user.role === 'patient' || user.user?.role === 'patient') && (
-                                <Link to="/book" className="group bg-white p-4 rounded-xl shadow-soft border border-secondary-100 hover:border-primary-500 hover:shadow-md transition-all flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-primary-50 rounded-lg flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">📅</div>
-                                    <div>
-                                        <strong className="block text-secondary-900 group-hover:text-primary-600 transition-colors">Book New Appointment</strong>
-                                        <p className="text-sm text-secondary-500">Schedule a visit with a specialist</p>
-                                    </div>
-                                </Link>
-                            )}
-                            <Link to="/schedule" className="group bg-white p-4 rounded-xl shadow-soft border border-secondary-100 hover:border-primary-500 hover:shadow-md transition-all flex items-center gap-4">
-                                <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🕒</div>
-                                <div>
-                                    <strong className="block text-secondary-900 group-hover:text-primary-600 transition-colors">
-                                        {(user.role === 'doctor' || user.user?.role === 'doctor') ? 'Manage Schedule' : 'View My Schedule'}
-                                    </strong>
-                                    <p className="text-sm text-secondary-500">
-                                        {(user.role === 'doctor' || user.user?.role === 'doctor') ? 'See your daily appointments' : 'Check your upcoming and past visits'}
-                                    </p>
-                                </div>
-                            </Link>
-                        </div>
-                    </section>
-
-                    {/* Recent Activity */}
-                    <section className="col-span-1 lg:col-span-2">
-                        <h2 className="text-xl font-bold text-secondary-900 mb-4">Recent Activity</h2>
-                        <div className="bg-white rounded-2xl shadow-soft border border-secondary-100 overflow-hidden">
-                            {recentAppointments.length > 0 ? (
-                                <div className="divide-y divide-secondary-100">
-                                    {recentAppointments.map(app => (
-                                        <div key={app._id} className="p-4 hover:bg-secondary-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                            <div>
-                                                <strong className="block text-secondary-900 font-semibold text-lg">
-                                                    {(user.role === 'patient' || user.user?.role === 'patient') ? app.doctorName : app.patientName}
-                                                </strong>
-                                                <div className="flex items-center gap-2 text-sm text-secondary-500 mt-1">
-                                                    <span className="bg-secondary-100 px-2 py-0.5 rounded text-secondary-600 font-medium">{app.department}</span>
-                                                    <span>•</span>
-                                                    <span>{app.date}</span>
-                                                </div>
+                            {loading ? (
+                                <p className="text-secondary-500">Loading activity...</p>
+                            ) : recentAppointments.length > 0 ? (
+                                recentAppointments.map(app => (
+                                    <div key={app._id} className="bg-white p-5 rounded-xl shadow-sm border border-secondary-100 flex items-center justify-between hover:shadow-md transition-shadow">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center text-primary-600 font-bold text-lg">
+                                                {app.patientName.charAt(0)}
                                             </div>
-                                            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider
-                                                ${app.status === 'upcoming' ? 'bg-blue-100 text-blue-700' : ''}
-                                                ${app.status === 'completed' ? 'bg-green-100 text-green-700' : ''}
-                                                ${app.status === 'cancelled' || app.status === 'rejected' ? 'bg-red-100 text-red-700' : ''}
-                                                ${app.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : ''}
-                                            `}>
-                                                {app.status}
-                                            </span>
+                                            <div>
+                                                <h4 className="font-semibold text-secondary-900">{app.patientName}</h4>
+                                                <p className="text-sm text-secondary-500">{new Date(app.date).toDateString()} • {app.time}</p>
+                                            </div>
                                         </div>
-                                    ))}
-                                </div>
+                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold 
+                                            ${app.status === 'Completed' ? 'bg-green-100 text-green-700' : 
+                                              app.status === 'Cancelled' ? 'bg-red-100 text-red-700' : 
+                                              'bg-orange-100 text-orange-700'}`}>
+                                            {app.status}
+                                        </span>
+                                    </div>
+                                ))
                             ) : (
-                                <div className="p-8 text-center text-secondary-500 italic">
-                                    No recent activity found.
-                                </div>
+                                <p className="text-secondary-500 bg-white p-6 rounded-xl border border-secondary-100 text-center">No recent activity.</p>
                             )}
                         </div>
-                    </section>
+                    </div>
+
+                    <div>
+                        <h2 className="text-xl font-display font-bold text-secondary-900 mb-4 flex items-center">
+                            <span className="w-1.5 h-6 bg-secondary-400 rounded-full mr-3"></span>
+                            Quick Actions
+                        </h2>
+                        <div className="bg-white p-6 rounded-2xl shadow-soft border border-secondary-100 space-y-3">
+                            <a href="/book" className="flex items-center p-3 rounded-xl hover:bg-primary-50 text-secondary-700 hover:text-primary-700 transition-colors font-medium border border-transparent hover:border-primary-100">
+                                <span className="w-8 h-8 rounded-lg bg-primary-100 text-primary-600 flex items-center justify-center mr-3 font-bold">+</span>
+                                New Appointment
+                            </a>
+                            <a href="/schedule" className="flex items-center p-3 rounded-xl hover:bg-secondary-50 text-secondary-700 transition-colors font-medium border border-transparent hover:border-secondary-200">
+                                <span className="w-8 h-8 rounded-lg bg-secondary-100 text-secondary-600 flex items-center justify-center mr-3">📅</span>
+                                View Schedule
+                            </a>
+                        </div>
+                    </div>
                 </div>
-            </main>
+            </div>
         </div>
     );
 };
