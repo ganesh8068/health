@@ -1,7 +1,8 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 const Navbar = ({ user, setUser }) => {
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleLogout = () => {
         localStorage.removeItem('user');
@@ -9,80 +10,69 @@ const Navbar = ({ user, setUser }) => {
         navigate('/login');
     };
 
+    const isActive = (path) => {
+        return location.pathname === path ? 'text-primary-600 font-bold bg-primary-50' : 'text-secondary-600 hover:text-primary-600 hover:bg-secondary-50';
+    };
+
+    const navLinkClass = "px-4 py-2 rounded-lg text-sm font-medium transition-colors";
+
     return (
-        <nav style={{
-            background: 'white',
-            padding: '1rem 2rem',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            position: 'sticky',
-            top: 0,
-            zIndex: 1000,
-            marginBottom: '2rem'
-        }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-                <h1 style={{ color: 'var(--primary)', fontSize: '1.5rem', margin: 0, fontWeight: '700' }}>MediCore Pro</h1>
+        <nav className="bg-white shadow-soft sticky top-0 z-50 mb-8 border-b border-secondary-100">
+            <div className="container mx-auto px-4">
+                <div className="flex justify-between items-center h-16">
+                    {/* Logo */}
+                    <Link to="/dashboard" className="flex items-center gap-2">
+                         <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center text-white font-bold font-display text-lg">M</div>
+                        <h1 className="text-xl font-display font-bold text-secondary-900 tracking-tight">MediCore Pro</h1>
+                    </Link>
 
-                {user && (
-                    <div style={{ display: 'flex', gap: '1.5rem' }}>
-                        <Link to="/dashboard" style={{
-                            textDecoration: 'none',
-                            color: 'var(--text-main)',
-                            fontWeight: '600',
-                            fontSize: '0.9rem'
-                        }}>Dashboard</Link>
+                    {/* Navigation Links */}
+                    {user && (
+                        <div className="hidden md:flex items-center gap-2">
+                            <Link to="/dashboard" className={`${navLinkClass} ${isActive('/dashboard')}`}>
+                                Dashboard
+                            </Link>
 
-                        {user.user.role === 'patient' && (
-                            <Link to="/book" style={{
-                                textDecoration: 'none',
-                                color: 'var(--text-muted)',
-                                fontSize: '0.9rem'
-                            }}>Book Appointment</Link>
-                        )}
+                            {(user.role === 'patient' || user.user?.role === 'patient') && (
+                                <Link to="/book" className={`${navLinkClass} ${isActive('/book')}`}>
+                                    Book Appointment
+                                </Link>
+                            )}
 
-                        <Link to="/schedule" style={{
-                            textDecoration: 'none',
-                            color: 'var(--text-muted)',
-                            fontSize: '0.9rem'
-                        }}>{user.user.role === 'doctor' ? 'My Schedule' : 'My Appointments'}</Link>
+                            <Link to="/schedule" className={`${navLinkClass} ${isActive('/schedule')}`}>
+                                {(user.role === 'doctor' || user.user?.role === 'doctor') ? 'My Schedule' : 'My Appointments'}
+                            </Link>
+                        </div>
+                    )}
 
-                        {(user.user.role === 'admin' || user.user.email === 'kartikchoudhary@gmail.com') && (
-                            <Link to="/admin" style={{
-                                textDecoration: 'none',
-                                color: 'var(--text-muted)',
-                                fontSize: '0.9rem'
-                            }}>Admin Panel</Link>
+                    {/* User Profile / Auth Action */}
+                    <div className="flex items-center gap-4">
+                        {user ? (
+                            <div className="flex items-center gap-4">
+                                <div className="text-right hidden sm:block">
+                                    <div className="text-sm font-bold text-secondary-900">{user.name || user.user?.name}</div>
+                                    <div className="text-xs text-secondary-500 font-medium capitalize">{user.role || user.user?.role}</div>
+                                </div>
+                                <button 
+                                    onClick={handleLogout}
+                                    className="px-4 py-2 rounded-lg bg-red-50 text-red-600 text-sm font-semibold hover:bg-red-100 hover:text-red-700 transition-colors"
+                                >
+                                    Logout
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-3">
+                                <Link to="/login" className="text-sm font-semibold text-secondary-600 hover:text-primary-600 transition-colors">
+                                    Login
+                                </Link>
+                                <Link to="/register" className="px-4 py-2 bg-primary-600 text-white text-sm font-semibold rounded-lg hover:bg-primary-700 shadow-lg shadow-primary-500/20 transition-all">
+                                    Register
+                                </Link>
+                            </div>
                         )}
                     </div>
-                )}
+                </div>
             </div>
-
-            {user ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{user.user.name}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{user.user.role}</div>
-                    </div>
-                    <button className="btn btn-logout-nav" style={{
-                        background: '#fee2e2',
-                        color: '#b91c1c',
-                        borderRadius: '50px',
-                        padding: '0.5rem 1.2rem',
-                        fontSize: '0.85rem',
-                        border: 'none',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
-                    }} onClick={handleLogout}>Logout</button>
-                </div>
-            ) : (
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                    <Link to="/login" style={{ textDecoration: 'none', color: 'var(--primary)', fontWeight: '600' }}>Login</Link>
-                    <Link to="/register" className="btn btn-primary" style={{ textDecoration: 'none', borderRadius: '50px', padding: '0.5rem 1.5rem' }}>Register</Link>
-                </div>
-            )}
         </nav>
     );
 };

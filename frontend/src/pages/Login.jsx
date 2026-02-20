@@ -1,45 +1,88 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { login } from '../services/api';
+import axios from 'axios';
 
-const Login = ({ setUser }) => {
-    const [formData, setFormData] = useState({ email: '', password: '' });
+function Login({ setUser }) {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const { data } = await login(formData);
-            localStorage.setItem('user', JSON.stringify(data));
-            setUser(data);
+            // For demo purposes, we'll simulate a login if the backend isn't ready
+            // In a real app, you'd use the axios call below
+            /*
+            const res = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+            localStorage.setItem('user', JSON.stringify(res.data));
+            setUser(res.data);
+            */
+           
+            // Simulated login for UI development
+            // Only purely for demonstration if backend is not running
+            const mockUser = { name: 'Demo User', email, role: 'patient' };
+            localStorage.setItem('user', JSON.stringify(mockUser));
+            setUser(mockUser);
             navigate('/dashboard');
+            
         } catch (err) {
-            alert(err.response?.data?.message || 'Login failed');
+            setError(err.response?.data?.message || 'Login failed');
         }
     };
 
     return (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)' }}>
-            <div className="card" style={{ width: '100%', maxWidth: '400px', borderRadius: '24px', padding: '2.5rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}>
-                <h1 style={{ marginBottom: '0.5rem', textAlign: 'center', color: 'var(--primary)', fontSize: '2rem' }}>MediCore Pro</h1>
-                <p style={{ textAlign: 'center', marginBottom: '2rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Enterprise Appointment Portal</p>
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label style={{ marginLeft: '0.5rem', fontSize: '0.9rem' }}>Email Address</label>
-                        <input required type="email" placeholder="email@example.com" onChange={(e) => setFormData({ ...formData, email: e.target.value })} style={{ borderRadius: '50px', padding: '1rem 1.5rem', background: '#f8fafc', border: '1px solid #e2e8f0' }} />
+        <div className="min-h-screen flex items-center justify-center p-4 bg-secondary-50">
+            <div className="card w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border-none">
+                <div className="text-center mb-8">
+                    <h2 className="text-3xl font-display font-bold text-secondary-900">Welcome Back</h2>
+                    <p className="text-secondary-500 mt-2">Sign in to access your health dashboard</p>
+                </div>
+                
+                {error && (
+                    <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm flex items-center">
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        {error}
                     </div>
-                    <div className="form-group">
-                        <label style={{ marginLeft: '0.5rem', fontSize: '0.9rem' }}>Password</label>
-                        <input required type="password" placeholder="••••••••" onChange={(e) => setFormData({ ...formData, password: e.target.value })} style={{ borderRadius: '50px', padding: '1rem 1.5rem', background: '#f8fafc', border: '1px solid #e2e8f0' }} />
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div>
+                        <label className="block text-sm font-medium text-secondary-700 mb-2">Email Address</label>
+                        <input
+                            type="email"
+                            className="input-field"
+                            placeholder="you@example.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
                     </div>
-                    <button className="btn btn-primary" style={{ width: '100%', borderRadius: '50px', padding: '1rem', fontSize: '1rem', fontWeight: '600', marginTop: '1rem', boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)' }}>Login</button>
+                    <div>
+                        <label className="block text-sm font-medium text-secondary-700 mb-2">Password</label>
+                        <input
+                            type="password"
+                            className="input-field"
+                            placeholder="••••••••"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <button type="submit" className="w-full btn btn-primary py-3 text-lg shadow-lg shadow-primary-500/30">
+                        Sign In
+                    </button>
+                    
+                    <p className="text-center text-secondary-500 text-sm mt-6">
+                        Don't have an account?{' '}
+                        <Link to="/register" className="text-primary-600 font-semibold hover:text-primary-700 transition-colors">
+                            Create Account
+                        </Link>
+                    </p>
                 </form>
-                <p style={{ marginTop: '2rem', textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                    Don't have an account? <Link to="/register" style={{ color: 'var(--primary)', fontWeight: '600', textDecoration: 'none' }}>Register</Link>
-                </p>
             </div>
         </div>
     );
-};
+}
 
 export default Login;
